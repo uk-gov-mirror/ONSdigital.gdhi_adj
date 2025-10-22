@@ -3,6 +3,7 @@ import pytest
 
 from gdhi_adj.adjustment.filter_adjustment import (
     filter_anomaly_list,
+    filter_by_year,
     filter_lsoa_data,
 )
 
@@ -41,6 +42,27 @@ def test_filter_lsoa_data():
         match="Mismatch: master_flag and Adjust column booleans do not match."
     ):
         filter_lsoa_data(df_mismatch)
+
+
+def test_filter_by_year():
+    """Test the filter_by_year function."""
+    df = pd.DataFrame({
+        "lad_code": ["E01", "E01", "E01", "E01"],
+        "adjust": [True, True, True, True],
+        "year": [2010, 2011, 2012, 2013],
+        "con_gdhi": [10, 20, 30, 40],
+    })
+
+    result_df = filter_by_year(df, start_year=2011, end_year=2012)
+
+    expected_df = pd.DataFrame({
+        "lad_code": ["E01", "E01"],
+        "adjust": [True, True],
+        "year": [2011, 2012],
+        "con_gdhi": [20, 30],
+    })
+
+    pd.testing.assert_frame_equal(result_df, expected_df, check_dtype=False)
 
 
 def test_filter_anomaly_list():

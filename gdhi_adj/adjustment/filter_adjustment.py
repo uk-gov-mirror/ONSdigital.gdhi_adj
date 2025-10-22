@@ -36,6 +36,26 @@ def filter_lsoa_data(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def filter_by_year(
+    df: pd.DataFrame, start_year: int, end_year: int
+) -> pd.DataFrame:
+    """
+    Filter DataFrame by a range of years inclusively.
+    Args:
+        df (pd.DataFrame): Input DataFrame containing year data.
+        start_year (int): Start year for filtering (inclusive).
+        end_year (int): End year for filtering (inclusive).
+    Returns:
+        pd.DataFrame: Filtered DataFrame containing only rows within the year
+        range.
+    """
+    df = df[(df["year"] >= start_year) & (df["year"] <= end_year)]
+
+    df = df.reset_index(drop=True)
+
+    return df
+
+
 def filter_anomaly_list(df: pd.DataFrame) -> pd.DataFrame:
     """
     Create a list of anomalies in the DataFrame.

@@ -1,15 +1,17 @@
 [user_settings]
 local_or_shared = "shared" # "local" or "shared"
-preprocessing = true # Set to true if you want to run preprocessing
+preprocessing = false # Set to true if you want to run preprocessing
 zscore_calculation = true # Set to true if you want to run z-score calculation
 iqr_calculation = true # Set to true if you want to run IQR calculation
-adjustment = false # Set to true if you want to run manual adjustment
+adjustment = true # Set to true if you want to run manual adjustment
 zscore_lower_threshold = -3.0
 zscore_upper_threshold = 3.0
 iqr_lower_quantile = 0.25
 iqr_upper_quantile = 0.75
 iqr_multiplier = 3.0
 transaction_name = "Compensation of employees"
+start_year = 2010
+end_year = 2023
 output_data = true
 
 [pipeline_settings]
@@ -41,8 +43,8 @@ output_filename = "manual_adj_preprocessed_output.csv" #Change name of file here
 #To run from SharePoint, you need to to go the Subnational Statistics - Regional Accounts
 #sharepoint site, go into the subfolder 'GDHI' and open '2025_manual_adjustments'
 #and click the 'sync' button to sync to your local OneDrive.
-input_adj_file_path = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Worked_Example/Manual_Adjustment_Adjustment_test_data.csv"
-input_constrained_file_path = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Worked_Example/Manual_Adjustment_Adjustment_con_dap_data.csv"
+input_adj_file_path = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/PowerBI_Tool/gdhi_manual_adj_preprocessed_SBRSS_output_test_analyst_assessment_DUMMY.csv"
+input_constrained_file_path = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Testing_Data/Reg_Accounts/regionalgrossdisposablehouseholdincomelocalauthorities2023Table7.csv"
 input_unconstrained_file_path = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Worked_Example/Manual_Adjustment_Adjustment_uncon_dap_data.csv"
 output_dir = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Testing_Data/Output/"
 output_filename = "gdhi_manual_adj_adjusted_output.csv" #Change name of file here

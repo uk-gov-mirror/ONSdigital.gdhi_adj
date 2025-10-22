@@ -11,6 +11,7 @@ from gdhi_adj.adjustment.calc_adjustment import (
 )
 from gdhi_adj.adjustment.filter_adjustment import (
     filter_anomaly_list,
+    filter_by_year,
     filter_lsoa_data,
 )
 from gdhi_adj.adjustment.join_adjustment import (
@@ -84,6 +85,10 @@ def run_adjustment(config: dict) -> None:
         + config["pipeline_settings"]["input_unconstrained_schema_name"]
     )
 
+    transaction_name = config["user_settings"]["transaction_name"]
+    start_year = config["user_settings"]["start_year"]
+    end_year = config["user_settings"]["end_year"]
+
     output_dir = "C:/Users/" + os.getlogin() + filepath_dict["output_dir"]
     output_schema_path = (
         schema_path
@@ -104,15 +109,20 @@ def run_adjustment(config: dict) -> None:
 
     logger.info("Filtering for data that requires adjustment.")
     df_powerbi_output = filter_lsoa_data(df_powerbi_output)
-
+    breakpoint()
     logger.info("Joining analyst output and constrained DAP output")
-    df = join_analyst_constrained_data(df_constrained, df_powerbi_output)
+    df = join_analyst_constrained_data(
+        df_constrained, df_powerbi_output, transaction_name
+    )
 
     logger.info("Joining analyst output and unconstrained DAP output")
     df = join_analyst_unconstrained_data(df_unconstrained, df)
 
     logger.info("Pivoting DataFrame long")
     df = pivot_adjustment_long(df)
+
+    logger.info("Filtering DataFrame by year range")
+    df = filter_by_year(df, start_year, end_year)
 
     logger.info("Calculate scaling factors")
     df_scaling = calc_scaling_factors(df)
