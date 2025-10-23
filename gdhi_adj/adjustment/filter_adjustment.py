@@ -13,15 +13,6 @@ def filter_lsoa_data(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Filtered DataFrame with only relevant columns and rows.
     """
-    # Check for rows where one column is null and the other is not
-    mismatch = df["master_flag"].isnull() != df["adjust"].isnull()
-
-    if mismatch.any():
-        raise ValueError(
-            "Mismatch: master_flag and Adjust column booleans do not match."
-        )
-
-    df["adjust"] = df["adjust"].astype("boolean").fillna(False)
     df = df[df["adjust"]]
 
     cols_to_keep = [

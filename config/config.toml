@@ -44,8 +44,8 @@ output_filename = "manual_adj_preprocessed_output.csv" #Change name of file here
 #sharepoint site, go into the subfolder 'GDHI' and open '2025_manual_adjustments'
 #and click the 'sync' button to sync to your local OneDrive.
 input_adj_file_path = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/PowerBI_Tool/gdhi_manual_adj_preprocessed_SBRSS_output_test_analyst_assessment_DUMMY.csv"
-input_constrained_file_path = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Testing_Data/Reg_Accounts/regionalgrossdisposablehouseholdincomelocalauthorities2023Table7.csv"
-input_unconstrained_file_path = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Worked_Example/Manual_Adjustment_Adjustment_uncon_dap_data.csv"
+input_constrained_file_path = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Testing_Data/DAP_Exported/GDHI_Preproc_HMRC_SBRSS_Constrained.csv"
+input_unconstrained_file_path = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Testing_Data/DAP_Exported/GDHI_Preproc_HMRC_SBRSS_Unconstrained.csv"
 output_dir = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Testing_Data/Output/"
 output_filename = "gdhi_manual_adj_adjusted_output.csv" #Change name of file here
 

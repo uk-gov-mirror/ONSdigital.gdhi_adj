@@ -22,6 +22,10 @@ from gdhi_adj.adjustment.pivot_adjustment import (
     pivot_adjustment_long,
     pivot_wide_dataframe,
 )
+from gdhi_adj.adjustment.reformat_adjustment import (
+    reformat_adjust_col,
+    reformat_year_col,
+)
 from gdhi_adj.utils.helpers import read_with_schema, write_with_schema
 from gdhi_adj.utils.logger import GDHI_adj_logger
 
@@ -85,7 +89,6 @@ def run_adjustment(config: dict) -> None:
         + config["pipeline_settings"]["input_unconstrained_schema_name"]
     )
 
-    transaction_name = config["user_settings"]["transaction_name"]
     start_year = config["user_settings"]["start_year"]
     end_year = config["user_settings"]["end_year"]
 
@@ -107,16 +110,24 @@ def run_adjustment(config: dict) -> None:
         input_unconstrained_file_path, input_unconstrained_schema_path
     )
 
+    logger.info("Reformatting adjust and year columns.")
+    df_powerbi_output = reformat_adjust_col(df_powerbi_output)
+    breakpoint()
+
+    df_powerbi_output = reformat_year_col(df_powerbi_output)
+    breakpoint()
+
     logger.info("Filtering for data that requires adjustment.")
     df_powerbi_output = filter_lsoa_data(df_powerbi_output)
     breakpoint()
+
     logger.info("Joining analyst output and constrained DAP output")
-    df = join_analyst_constrained_data(
-        df_constrained, df_powerbi_output, transaction_name
-    )
+    df = join_analyst_constrained_data(df_constrained, df_powerbi_output)
+    breakpoint()
 
     logger.info("Joining analyst output and unconstrained DAP output")
     df = join_analyst_unconstrained_data(df_unconstrained, df)
+    breakpoint()
 
     logger.info("Pivoting DataFrame long")
     df = pivot_adjustment_long(df)

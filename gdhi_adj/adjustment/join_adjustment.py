@@ -6,7 +6,6 @@ import pandas as pd
 def join_analyst_constrained_data(
     df_constrained: pd.DataFrame,
     df_analyst: pd.DataFrame,
-    transaction_name: str,
 ) -> pd.DataFrame:
     """
     Join analyst data to constrained data based on LSOA code and LAD code.
@@ -14,19 +13,13 @@ def join_analyst_constrained_data(
     Args:
         df_constrained (pd.DataFrame): DataFrame containing constrained data.
         df_analyst (pd.DataFrame): DataFrame containing analyst data.
-        transaction_name (str): Name of the transaction to filter constrained
-        data.
 
     Returns:
         pd.DataFrame: Joined DataFrame with relevant columns.
     """
-    df_constrained = df_constrained[
-        df_constrained["transaction"] == transaction_name
-    ]
-
-    df = df_analyst.merge(
-        df_constrained,
-        on=["lad_code"],
+    df = df_constrained.merge(
+        df_analyst,
+        on=["lsoa_code", "lad_code"],
         how="left",
     )
 

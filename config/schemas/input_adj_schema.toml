@@ -16,8 +16,8 @@ Deduced_Data_Type = "str"
 
 [adjust]
 old_name = "Adjust"
-Deduced_Data_Type = "boolean"
+Deduced_Data_Type = "str"
 
 [year]
 old_name = "Year"
-Deduced_Data_Type = "int"
+Deduced_Data_Type = "str"
