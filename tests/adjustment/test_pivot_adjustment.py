@@ -2,7 +2,7 @@ import pandas as pd
 
 from gdhi_adj.adjustment.pivot_adjustment import (
     pivot_adjustment_long,
-    pivot_wide_dataframe,
+    pivot_wide_final_dataframe,
 )
 
 
@@ -34,8 +34,8 @@ def test_pivot_adjustment_long():
     pd.testing.assert_frame_equal(result_df, expected_df, check_dtype=False)
 
 
-def test_pivot_wide_dataframe():
-    """Test the pivot_wide_dataframe function."""
+def test_pivot_wide_final_dataframe():
+    """Test the pivot_wide_final_dataframe function."""
     df = pd.DataFrame({
         "lsoa_code": ["E1", "E1", "E1", "E2", "E2", "E2"],
         # Testing lad_code column is dropped during pivot
@@ -45,7 +45,7 @@ def test_pivot_wide_dataframe():
         "con_gdhi": [5.0, 15.0, 25.0, 35.0, 45.0, 55.0]
     })
 
-    result_df = pivot_wide_dataframe(df)
+    result_df = pivot_wide_final_dataframe(df)
 
     expected_df = pd.DataFrame({
         "lsoa_code": ["E1", "E2"],

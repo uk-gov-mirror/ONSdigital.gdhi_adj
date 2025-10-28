@@ -1,16 +1,14 @@
 """Module for adjusting data in the gdhi_adj project."""
 
 import os
+import re
 
 from gdhi_adj.adjustment.calc_adjustment import (
-    apply_adjustment,
-    calc_adjustment_headroom_val,
-    calc_adjustment_val,
+    apportion_adjustment,
+    calc_midpoint_adjustment,
     calc_midpoint_val,
-    calc_scaling_factors,
 )
 from gdhi_adj.adjustment.filter_adjustment import (
-    filter_anomaly_list,
     filter_by_year,
     filter_lsoa_data,
 )
@@ -20,11 +18,15 @@ from gdhi_adj.adjustment.join_adjustment import (
 )
 from gdhi_adj.adjustment.pivot_adjustment import (
     pivot_adjustment_long,
-    pivot_wide_dataframe,
+    pivot_wide_final_dataframe,
 )
 from gdhi_adj.adjustment.reformat_adjustment import (
     reformat_adjust_col,
     reformat_year_col,
+)
+from gdhi_adj.preprocess.pivot_preprocess import (
+    pivot_output_long,
+    pivot_wide_dataframe,
 )
 from gdhi_adj.utils.helpers import read_with_schema, write_with_schema
 from gdhi_adj.utils.logger import GDHI_adj_logger
@@ -77,6 +79,13 @@ def run_adjustment(config: dict) -> None:
         + filepath_dict["input_unconstrained_file_path"]
     )
 
+    match = re.search(
+        r".*GDHI_Preproc_(.*?)_[^_]+\.csv", input_unconstrained_file_path
+    )
+
+    if match:
+        gdhi_suffix = match.group(1) + "_"
+
     input_adj_schema_path = (
         schema_path + config["pipeline_settings"]["input_adj_schema_name"]
     )
@@ -93,11 +102,21 @@ def run_adjustment(config: dict) -> None:
     end_year = config["user_settings"]["end_year"]
 
     output_dir = "C:/Users/" + os.getlogin() + filepath_dict["output_dir"]
+    output_adjustment_powerbi_schema_path = (
+        schema_path
+        + config["pipeline_settings"]["output_adjustment_powerbi_schema_path"]
+    )
     output_schema_path = (
         schema_path
         + config["pipeline_settings"]["output_adjustment_schema_path"]
     )
-    new_filename = filepath_dict.get("output_filename", None)
+    interim_filename = gdhi_suffix + filepath_dict.get(
+        "interim_filename", None
+    )
+    powerbi_filename = gdhi_suffix + filepath_dict.get(
+        "output_powerbi_filename", None
+    )
+    new_filename = gdhi_suffix + filepath_dict.get("output_filename", None)
 
     logger.info("Reading in data with schemas")
     df_powerbi_output = read_with_schema(
@@ -129,42 +148,53 @@ def run_adjustment(config: dict) -> None:
 
     logger.info("Filtering DataFrame by year range")
     df = filter_by_year(df, start_year, end_year)
+
+    logger.info("Calculating outlier year midpoints")
+    midpoint_df = calc_midpoint_val(df)
+
+    logger.info("Calculating adjustment values based on midpoints")
+    df = calc_midpoint_adjustment(df, midpoint_df)
+
+    logger.info("Apportioning adjustment values to all years")
+    df = apportion_adjustment(df)
+
+    logger.info("Saving interim data")
+    logger.info(f"{output_dir + interim_filename}")
+    df.to_csv(
+        output_dir + interim_filename,
+        index=False,
+    )
+    logger.info("Data saved successfully")
+
+    df = df.drop(
+        columns=[
+            "con_gdhi",
+            "midpoint",
+            "midpoint_diff",
+            "adjustment_val",
+            "year_count",
+        ]
+    ).rename(columns={"adjusted_con_gdhi": "con_gdhi"})
+
+    logger.info("Pivoting DataFrame wide for PowerBI QA")
     print(df)
+    breakpoint()
+    powerbi_qa_df = pivot_output_long(df, "uncon_gdhi", "con_gdhi")
+    powerbi_qa_df = pivot_wide_dataframe(powerbi_qa_df)
 
-    logger.info("Calculate scaling factors")
-    df_scaling = calc_scaling_factors(df)
-    print(df_scaling)
-    logger.info("Calculating adjustment")
-    df_anomaly_lsoas = filter_anomaly_list(df)
-
-    for i in range(len(df_anomaly_lsoas)):
-        breakpoint()
-        lsoa_code = df_anomaly_lsoas.iloc[i]["lsoa_code"]
-        year_to_adjust = df_anomaly_lsoas.iloc[i]["year_to_adjust"]
-
-        logger.info("Calculating adjustment headroom")
-        uncon_non_out_sum, headroom_val = calc_adjustment_headroom_val(
-            df, df_scaling, lsoa_code, year_to_adjust
+    # Save output file with new filename if specified
+    if config["user_settings"]["output_data"]:
+        # Write DataFrame to CSV
+        write_with_schema(
+            powerbi_qa_df,
+            output_adjustment_powerbi_schema_path,
+            output_dir,
+            powerbi_filename,
         )
 
-        logger.info("Calculating adjustment midpoint")
-        outlier_val, midpoint_val = calc_midpoint_val(
-            df, lsoa_code, year_to_adjust
-        )
-
-        logger.info("Calculating adjustment value")
-        adjustment_val = calc_adjustment_val(
-            headroom_val, outlier_val, midpoint_val
-        )
-
-        logger.info("Updating anomaly year")
-        df = apply_adjustment(
-            df,
-            year_to_adjust,
-            adjustment_val,
-            uncon_non_out_sum,
-        )
-    df = pivot_wide_dataframe(df)
+    logger.info("Pivoting final DataFrame wide for exporting")
+    breakpoint()
+    df = pivot_wide_final_dataframe(df)
 
     # Save output file with new filename if specified
     if config["user_settings"]["output_data"]:

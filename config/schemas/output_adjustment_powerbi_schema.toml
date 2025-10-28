@@ -1,15 +1,15 @@
-[lsoa_code]
+["LSOA code"]
 old_name = "lsoa_code"
 Deduced_Data_Type = "str"
 
-[lsoa_name]
+["LSOA name"]
 old_name = "lsoa_name"
 Deduced_Data_Type = "str"
 
-[lad_code]
+["LAD code"]
 old_name = "lad_code"
 Deduced_Data_Type = "str"
 
-[lad_name]
+["LAD name"]
 old_name = "lad_name"
 Deduced_Data_Type = "str"

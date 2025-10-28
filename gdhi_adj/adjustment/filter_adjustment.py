@@ -45,23 +45,3 @@ def filter_by_year(
     df = df.reset_index(drop=True)
 
     return df
-
-
-def filter_anomaly_list(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Create a list of anomalies in the DataFrame.
-
-    Args:
-        df (pd.DataFrame): DataFrame containing data to check for anomalies.
-
-    Returns:
-        pd.DataFrame: DataFrame with unique anomalies listed.
-    """
-    anomaly_lsoa = df[df["adjust"]]
-    anomaly_lsoa = (
-        anomaly_lsoa[["lsoa_code", "year_to_adjust"]]
-        .drop_duplicates()
-        .reset_index(drop=True)
-    )
-
-    return anomaly_lsoa
