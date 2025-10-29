@@ -13,7 +13,7 @@ def filter_lsoa_data(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Filtered DataFrame with only relevant columns and rows.
     """
-    df = df[df["adjust"]]
+    df = df[df["adjust"].astype("boolean").fillna(False)]
 
     cols_to_keep = [
         "lsoa_code",

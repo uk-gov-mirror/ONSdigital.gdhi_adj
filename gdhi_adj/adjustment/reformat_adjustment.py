@@ -20,7 +20,7 @@ def reformat_adjust_col(df: pd.DataFrame) -> pd.DataFrame:
     descriptors = [True]
     df["adjust"] = np.select(conditions, descriptors, default=False)
 
-    df["adjust"] = df["adjust"].astype("boolean")
+    df["adjust"] = df["adjust"].astype("bool")
 
     return df
 
@@ -48,7 +48,7 @@ def to_int_list(cell: Any) -> List[int]:
         # treat as string otherwise
         s = str(cell).strip()
         if s == "" or s.lower() == "nan":
-            return None
+            return []
         # remove surrounding brackets optionally: "[2001,2002]" -> "2001,2002"
         parts = [p.strip() for p in s.split(",") if p.strip() != ""]
 

@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_list_like
 
 
 def calc_midpoint_val(df: pd.DataFrame) -> pd.DataFrame:
@@ -17,6 +18,9 @@ def calc_midpoint_val(df: pd.DataFrame) -> pd.DataFrame:
 
     # ensure year_to_adjust is list-like and normalize missing
     def ensure_list(x):
+        # handle list-like first — avoids calling pd.isna on arrays/Series
+        if is_list_like(x) and not isinstance(x, (str, bytes)):
+            return list(x)
         if pd.isna(x):
             return []
         if isinstance(x, (list, tuple, set)):
