@@ -66,7 +66,9 @@ def to_int_list(cell: Any) -> List[int]:
     return out
 
 
-def reformat_year_col(df: pd.DataFrame) -> pd.DataFrame:
+def reformat_year_col(
+    df: pd.DataFrame, start_year: int, end_year: int
+) -> pd.DataFrame:
     """
     Reformat data within the year column.
 
@@ -91,13 +93,25 @@ def reformat_year_col(df: pd.DataFrame) -> pd.DataFrame:
         lambda x: tuple(x) if isinstance(x, (list, tuple, np.ndarray)) else x
     )
 
-    # Check for rows where adjust column is marked true to be adjusted but
-    # year has not been populated
-    # mismatch = (df["adjust"] == True) & (df["year"] == [])
+    def _ensure_no_duplicates(seq):
+        if len(seq) != len(set(seq)):
+            raise ValueError(
+                "Duplicate years found in year column within LSOA."
+            )
 
-    # if mismatch.any():
-    #     raise ValueError(
-    #         "Mismatch: adjust column flagged but no year to adjust has been "
-    #         "provided."
-    #     )
+    df["year"].apply(_ensure_no_duplicates)
+
+    # Check that all years specified for adjustment are within valid range
+    def _ensure_years_in_range(years, start_year, end_year):
+        for year in years:
+            if year < start_year or year > end_year:
+                raise ValueError(
+                    f"Year {year} in year column is out of valid range "
+                    f"{start_year}-{end_year}."
+                )
+
+    df["year"].apply(
+        lambda years: _ensure_years_in_range(years, start_year, end_year)
+    )
+
     return df

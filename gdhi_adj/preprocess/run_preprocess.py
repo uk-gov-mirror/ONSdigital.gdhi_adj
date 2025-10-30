@@ -60,11 +60,11 @@ def run_preprocessing(config: dict) -> None:
     filepath_dict = config[f"preprocessing_{local_or_shared}_settings"]
     schema_path = config["pipeline_settings"]["schema_path"]
 
-    input_gdhi_file_path = (
+    input_unconstrained_file_path = (
         "C:/Users/"
         + os.getlogin()
         + filepath_dict["input_dir"]
-        + filepath_dict["input_gdhi_file_path"]
+        + filepath_dict["input_unconstrained_file_path"]
     )
     input_ra_lad_file_path = (
         "C:/Users/"
@@ -73,7 +73,9 @@ def run_preprocessing(config: dict) -> None:
         + filepath_dict["input_ra_lad_file_path"]
     )
 
-    match = re.search(r".*GDHI_Preproc_(.*?)_[^_]+\.csv", input_gdhi_file_path)
+    match = re.search(
+        r".*GDHI_Preproc_(.*?)_[^_]+\.csv", input_unconstrained_file_path
+    )
 
     if match:
         gdhi_suffix = match.group(1) + "_"
@@ -109,7 +111,9 @@ def run_preprocessing(config: dict) -> None:
     logger.info("Configuration settings loaded successfully")
 
     logger.info("Reading in data with schemas")
-    df = read_with_schema(input_gdhi_file_path, input_gdhi_schema_path)
+    df = read_with_schema(
+        input_unconstrained_file_path, input_gdhi_schema_path
+    )
     ra_lad = read_with_schema(input_ra_lad_file_path, input_ra_lad_schema_path)
 
     logger.info("Pivoting data to long format")

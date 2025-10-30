@@ -9,8 +9,9 @@ from gdhi_adj.adjustment.calc_adjustment import (
     calc_midpoint_val,
 )
 from gdhi_adj.adjustment.filter_adjustment import (
-    filter_by_year,
-    filter_lsoa_data,
+    filter_adjust,
+    filter_component,
+    filter_year,
 )
 from gdhi_adj.adjustment.join_adjustment import (
     join_analyst_constrained_data,
@@ -43,7 +44,7 @@ def run_adjustment(config: dict) -> None:
     1. Load the configuration settings.
     2. Load the input data.
     3. Reformat adjust and year columns.
-    4. Filter for data that requires adjustment.
+    4. Filter of data for adjustment.
     5. Join analyst output with constrained and unconstrained data.
     6. Pivot the DataFrame to long format for manipulation.
     7. Filter data by the specified year range.
@@ -106,6 +107,10 @@ def run_adjustment(config: dict) -> None:
     start_year = config["user_settings"]["start_year"]
     end_year = config["user_settings"]["end_year"]
 
+    sas_code_filter = config["user_settings"]["sas_code_filter"]
+    cord_code_filter = config["user_settings"]["cord_code_filter"]
+    credit_debit_filter = config["user_settings"]["credit_debit_filter"]
+
     output_dir = "C:/Users/" + os.getlogin() + filepath_dict["output_dir"]
     output_adjustment_powerbi_schema_path = (
         schema_path
@@ -137,10 +142,15 @@ def run_adjustment(config: dict) -> None:
     logger.info("Reformatting adjust and year columns.")
     df_powerbi_output = reformat_adjust_col(df_powerbi_output)
 
-    df_powerbi_output = reformat_year_col(df_powerbi_output)
+    df_powerbi_output = reformat_year_col(
+        df_powerbi_output, start_year, end_year
+    )
 
     logger.info("Filtering for data that requires adjustment.")
-    df_powerbi_output = filter_lsoa_data(df_powerbi_output)
+    df_powerbi_output = filter_adjust(df_powerbi_output)
+    df_constrained = filter_component(
+        df_constrained, sas_code_filter, cord_code_filter, credit_debit_filter
+    )
 
     logger.info("Joining analyst output and constrained DAP output")
     df = join_analyst_constrained_data(df_constrained, df_powerbi_output)
@@ -152,7 +162,7 @@ def run_adjustment(config: dict) -> None:
     df = pivot_adjustment_long(df)
 
     logger.info("Filtering DataFrame by year range")
-    df = filter_by_year(df, start_year, end_year)
+    df = filter_year(df, start_year, end_year)
 
     logger.info("Calculating outlier year midpoints")
     midpoint_df = calc_midpoint_val(df)

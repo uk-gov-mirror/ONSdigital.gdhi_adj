@@ -99,6 +99,12 @@ This project flags outliers of GDHI data at LSOA levels and adjusts the outlier 
       start_year = 2010
       end_year = 2023
       ```
+    - Check the component filters for the constrained data, match the respective components of the unconstrained data.
+      ```
+      sas_code_filter = "G866BTR"
+      cord_code_filter = "D75"
+      credit_debit_filter = "D"
+      ```
     - If you want to export the final output from the module you are running, set output_data in user_settings to true.
       ```
       output_data = true
