@@ -93,10 +93,9 @@ def calc_midpoint_adjustment(
         on=["lsoa_code", "year"],
         how="left",
     )
-
-    adjustment_df["adjustment_val"] = adjustment_df.groupby("lsoa_code")[
-        "midpoint_diff"
-    ].transform("sum")
+    adjustment_df["adjustment_val"] = adjustment_df.groupby(
+        ["lad_code", "year"]
+    )["midpoint_diff"].transform("sum")
 
     return adjustment_df
 
@@ -114,8 +113,8 @@ def apportion_adjustment(df: pd.DataFrame) -> pd.DataFrame:
     """
     adjusted_df = df.copy()
 
-    adjusted_df["year_count"] = adjusted_df.groupby("lsoa_code")[
-        "year"
+    adjusted_df["lsoa_count"] = adjusted_df.groupby(["lad_code", "year"])[
+        "lsoa_code"
     ].transform("count")
 
     adjusted_df["adjusted_con_gdhi"] = np.where(
@@ -126,10 +125,34 @@ def apportion_adjustment(df: pd.DataFrame) -> pd.DataFrame:
 
     adjusted_df["adjusted_con_gdhi"] += np.where(
         adjusted_df["adjustment_val"].notna(),
-        adjusted_df["adjustment_val"] / adjusted_df["year_count"],
+        adjusted_df["adjustment_val"] / adjusted_df["lsoa_count"],
         0,
     )
 
-    return adjusted_df.sort_values(by=["lsoa_code", "year"]).reset_index(
+    # Adjustment check: sums by (lad_code, year) should match pre- and post-
+    # adjustment
+    adjusted_df_check = adjusted_df.copy()
+    adjusted_df_check["unadjusted_sum"] = adjusted_df.groupby(
+        ["lad_code", "year"]
+    )["con_gdhi"].transform("sum")
+
+    adjusted_df_check["adjusted_sum"] = adjusted_df_check.groupby(
+        ["lad_code", "year"]
+    )["adjusted_con_gdhi"].transform("sum")
+
+    adjusted_df_check["adjustment_check"] = abs(
+        adjusted_df_check["unadjusted_sum"] - adjusted_df_check["adjusted_sum"]
+    )
+
+    adjusted_df_check = adjusted_df_check[
+        adjusted_df_check["adjustment_check"] > 0.000001
+    ]
+
+    if not adjusted_df_check.empty:
+        raise ValueError(
+            "Adjustment check failed: LAD sums do not match after adjustment."
+        )
+
+    return adjusted_df.sort_values(by=["lad_code", "year"]).reset_index(
         drop=True
     )

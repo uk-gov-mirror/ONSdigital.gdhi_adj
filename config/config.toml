@@ -1,21 +1,24 @@
 [user_settings]
+# Common settings
 local_or_shared = "shared" # "local" or "shared"
+start_year = 2010
+end_year = 2023
+output_data = true
+# Preprocessing settings
 preprocessing = false # Set to true if you want to run preprocessing
 zscore_calculation = true # Set to true if you want to run z-score calculation
 iqr_calculation = true # Set to true if you want to run IQR calculation
-adjustment = true # Set to true if you want to run manual adjustment
 zscore_lower_threshold = -3.0 # zscore flagged if it is below this threshold
 zscore_upper_threshold = 3.0 # zscore flagged if it is above this threshold
 iqr_lower_quantile = 0.25 # quantile for IQR lower bound
 iqr_upper_quantile = 0.75 # quantile for IQR upper bound
 iqr_multiplier = 3.0 # multiplier for calculating IQR bounds
 transaction_name = "Compensation of employees"
-start_year = 2010
-end_year = 2023
+# Adjustment settings
+adjustment = true # Set to true if you want to run manual adjustment
 sas_code_filter = "G866BTR"
 cord_code_filter = "D75"
 credit_debit_filter = "D"
-output_data = true
 
 [pipeline_settings]
 schema_path = "config/schemas/"
@@ -25,7 +28,6 @@ input_adj_schema_name = "input_adj_schema.toml"
 input_constrained_schema_name = "input_constrained_schema.toml"
 input_unconstrained_schema_name = "input_unconstrained_schema.toml"
 output_preprocess_schema_path = "output_preprocess_schema.toml"
-output_adjustment_powerbi_schema_path = "output_adjustment_powerbi_schema.toml"
 output_adjustment_schema_path = "output_adjustment_schema.toml"
 
 [preprocessing_shared_settings]
@@ -48,7 +50,6 @@ input_constrained_file_path = "/Office for National Statistics/Subnational Stati
 input_unconstrained_file_path = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Testing_Data/DAP_Exported/GDHI_Preproc_HMRC_SBRSS_Unconstrained.csv"
 output_dir = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Testing_Data/Output/"
 interim_filename =  "manual_adj_adjustments_interim_QA.csv" #Change name of file here
-output_powerbi_filename = "gdhi_manual_adj_powerbi_QA_output.csv" #Change name of file here
 output_filename = "gdhi_manual_adj_adjusted_output.csv" #Change name of file here
 
 [preprocessing_local_settings]
@@ -69,5 +70,4 @@ input_constrained_file_path = "D:/gdhi/Testing_Data/gdhi_adj_constrained_dummy.c
 input_unconstrained_file_path = "D:/gdhi/Testing_Data/gdhi_adj_unconstrained_dummy.csv"
 output_dir = "D:/gdhi/Testing_Data/Output/"
 interim_filename =  "manual_adj_adjustments_interim_QA.csv" #Change name of file here
-output_powerbi_filename = "gdhi_manual_adj_powerbi_QA_output.csv" #Change name of file here
 output_filename = "gdhi_manual_adj_adjusted_output.csv" #Change name of file here

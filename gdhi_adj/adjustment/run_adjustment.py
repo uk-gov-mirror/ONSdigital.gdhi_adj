@@ -25,10 +25,6 @@ from gdhi_adj.adjustment.reformat_adjustment import (
     reformat_adjust_col,
     reformat_year_col,
 )
-from gdhi_adj.preprocess.pivot_preprocess import (
-    pivot_output_long,
-    pivot_wide_dataframe,
-)
 from gdhi_adj.utils.helpers import read_with_schema, write_with_schema
 from gdhi_adj.utils.logger import GDHI_adj_logger
 
@@ -112,19 +108,12 @@ def run_adjustment(config: dict) -> None:
     credit_debit_filter = config["user_settings"]["credit_debit_filter"]
 
     output_dir = "C:/Users/" + os.getlogin() + filepath_dict["output_dir"]
-    output_adjustment_powerbi_schema_path = (
-        schema_path
-        + config["pipeline_settings"]["output_adjustment_powerbi_schema_path"]
-    )
     output_schema_path = (
         schema_path
         + config["pipeline_settings"]["output_adjustment_schema_path"]
     )
     interim_filename = gdhi_suffix + filepath_dict.get(
         "interim_filename", None
-    )
-    powerbi_filename = gdhi_suffix + filepath_dict.get(
-        "output_powerbi_filename", None
     )
     new_filename = gdhi_suffix + filepath_dict.get("output_filename", None)
 
@@ -187,23 +176,9 @@ def run_adjustment(config: dict) -> None:
             "midpoint",
             "midpoint_diff",
             "adjustment_val",
-            "year_count",
+            "lsoa_count",
         ]
     ).rename(columns={"adjusted_con_gdhi": "con_gdhi"})
-
-    logger.info("Pivoting DataFrame wide for PowerBI QA")
-    powerbi_qa_df = pivot_output_long(df, "uncon_gdhi", "con_gdhi")
-    powerbi_qa_df = pivot_wide_dataframe(powerbi_qa_df)
-
-    # Save output file with new filename if specified
-    if config["user_settings"]["output_data"]:
-        # Write DataFrame to CSV
-        write_with_schema(
-            powerbi_qa_df,
-            output_adjustment_powerbi_schema_path,
-            output_dir,
-            powerbi_filename,
-        )
 
     logger.info("Pivoting final DataFrame wide for exporting")
     df = pivot_wide_final_dataframe(df)

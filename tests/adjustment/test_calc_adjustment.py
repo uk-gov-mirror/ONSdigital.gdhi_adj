@@ -50,32 +50,33 @@ def test_calc_midpoint_adjustment():
     the summed adjustment_val across all rows for the same LSOA.
     """
     df = pd.DataFrame({
-        "lsoa_code": ["E1", "E1", "E1", "E2"],
-        "year": [2002, 2003, 2004, 2003],
+        "lsoa_code": ["E1", "E2", "E3", "E1"],
+        "lad_code": ["E01", "E01", "E01", "E01"],
+        "year": [2002, 2002, 2002, 2003],
         "con_gdhi": [5.0, 8.0, 10.0, 15.0],
     })
 
     # midpoint_df contains only the outlier row(s) with their computed midpoint
     midpoint_df = pd.DataFrame({
-        "lsoa_code": ["E1"],
-        "year": [2003],
-        "con_gdhi": [8.0],
-        "midpoint": [7.5],
+        "lsoa_code": ["E2", "E3"],
+        "year": [2002, 2002],
+        "con_gdhi": [8.0, 10.0],
+        "midpoint": [7.5, 11.0],
     })
 
     result_df = calc_midpoint_adjustment(df, midpoint_df)
 
     expected_df = pd.DataFrame({
-        "lsoa_code": ["E1", "E1", "E1", "E2"],
-        "year": [2002, 2003, 2004, 2003],
+        "lsoa_code": ["E1", "E2", "E3", "E1"],
+        "lad_code": ["E01", "E01", "E01", "E01"],
+        "year": [2002, 2002, 2002, 2003],
         "con_gdhi": [5.0, 8.0, 10.0, 15.0],
-        # midpoint only present for the outlier row (E1,2003)
-        "midpoint": [None, 7.5, None, None],
-        "midpoint_diff": [None, 0.5, None, None],
-        # group sum of midpoint_diff for E1 is 0.5; for E2 (all NaN) pandas
-        # produces 0.0 when summing; transform('sum') therefore gives 0.5
-        # for E1 rows and 0.0 for E2 rows.
-        "adjustment_val": [0.5, 0.5, 0.5, 0.0],
+        "midpoint": [None, 7.5, 11.0, None],
+        "midpoint_diff": [None, 0.5, -1.0, None],
+        # group sum of midpoint_diff for E01 2002 is -0.5; for E01 2003 (all
+        # NaN) pandas produces 0.0 when summing; transform('sum') therefore
+        # gives 0.5 for 2002 rows and 0.0 for 2003 rows.
+        "adjustment_val": [-0.5, -0.5, -0.5, 0.0],
     })
 
     pd.testing.assert_frame_equal(result_df, expected_df, check_dtype=False)
@@ -87,8 +88,9 @@ def test_apportion_adjustment():
     """
 
     df = pd.DataFrame({
-        "lsoa_code": ["E1", "E1", "E1", "E2"],
-        "year": [2002, 2003, 2004, 2003],
+        "lsoa_code": ["E1", "E2", "E3", "E1"],
+        "lad_code": ["E01", "E01", "E01", "E01"],
+        "year": [2002, 2002, 2002, 2003],
         "con_gdhi": [5.0, 8.0, 10.0, 15.0],
         # midpoint only present for E1 2003
         "midpoint": [None, 7.4, None, None],
@@ -99,12 +101,13 @@ def test_apportion_adjustment():
     result_df = apportion_adjustment(df)
 
     expected_df = pd.DataFrame({
-        "lsoa_code": ["E1", "E1", "E1", "E2"],
-        "year": [2002, 2003, 2004, 2003],
+        "lsoa_code": ["E1", "E2", "E3", "E1"],
+        "lad_code": ["E01", "E01", "E01", "E01"],
+        "year": [2002, 2002, 2002, 2003],
         "con_gdhi": [5.0, 8.0, 10.0, 15.0],
         "midpoint": [None, 7.4, None, None],
         "adjustment_val": [0.6, 0.6, 0.6, None],
-        "year_count": [3, 3, 3, 1],
+        "lsoa_count": [3, 3, 3, 1],
         "adjusted_con_gdhi": [5.2, 7.6, 10.2, 15.0],
     })
 
