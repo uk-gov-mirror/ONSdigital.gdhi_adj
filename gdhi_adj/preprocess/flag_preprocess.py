@@ -80,3 +80,33 @@ def create_master_flag(
     df["master_flag"] = df[flag_cols].all(axis=1)
 
     return df
+
+
+def add_config_parameter_cols(
+    df: pd.DataFrame,
+    zscore_lower_threshold: float,
+    zscore_upper_threshold: float,
+    iqr_lower_quantile: float,
+    iqr_upper_quantile: float,
+    iqr_multiplier: float,
+) -> pd.DataFrame:
+    """
+    Adds configuration parameter columns to the DataFrame for reference.
+
+    Args:
+        df (pd.DataFrame): The input DataFrame.
+        zscore_lower_threshold (float): Z-score lower threshold.
+        zscore_upper_threshold (float): Z-score upper threshold.
+        iqr_lower_quantile (float): IQR lower quantile.
+        iqr_upper_quantile (float): IQR upper quantile.
+        iqr_multiplier (float): IQR multiplier.
+    Returns:
+        pd.DataFrame: DataFrame with configuration parameter columns.
+    """
+    df["zscore_lower_threshold"] = zscore_lower_threshold
+    df["zscore_upper_threshold"] = zscore_upper_threshold
+    df["iqr_lower_quantile"] = iqr_lower_quantile
+    df["iqr_upper_quantile"] = iqr_upper_quantile
+    df["iqr_multiplier"] = iqr_multiplier
+
+    return df

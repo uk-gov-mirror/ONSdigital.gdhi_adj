@@ -80,6 +80,12 @@ def run_adjustment(config: dict) -> None:
         + filepath_dict["input_unconstrained_file_path"]
     )
 
+    # match = re.search(
+    #     r".*GDHI_Disclosure_(.*?)_[^_]+\.csv", input_unconstrained_file_path
+    # )
+
+    # if match:
+    #     gdhi_suffix = match.group(1) + "_"
     gdhi_suffix = config["user_settings"]["output_data_prefix"] + "_"
 
     input_adj_schema_path = (
@@ -144,7 +150,7 @@ def run_adjustment(config: dict) -> None:
     logger.info("Pivoting DataFrame long")
     df = pivot_adjustment_long(df)
 
-    logger.info("Filtering DataFrame by year range")
+    logger.info("Filtering data for specified years")
     df = filter_year(df, start_year, end_year)
 
     logger.info("Calculating outlier year midpoints")

@@ -2,6 +2,7 @@
 
 import os
 
+from gdhi_adj.adjustment.filter_adjustment import filter_year
 from gdhi_adj.preprocess.calc_preprocess import (
     calc_iqr,
     calc_lad_mean,
@@ -9,6 +10,7 @@ from gdhi_adj.preprocess.calc_preprocess import (
     calc_zscores,
 )
 from gdhi_adj.preprocess.flag_preprocess import (
+    add_config_parameter_cols,
     create_master_flag,
     flag_rollback_years,
 )
@@ -72,6 +74,12 @@ def run_preprocessing(config: dict) -> None:
         + filepath_dict["input_ra_lad_file_path"]
     )
 
+    # match = re.search(
+    #     r".GDHI_Disclosure_(.*?)_[^_]+\.csv", input_unconstrained_file_path
+    # )
+
+    # if match:
+    #     gdhi_suffix = match.group(1) + "_"
     gdhi_suffix = config["user_settings"]["output_data_prefix"] + "_"
 
     input_gdhi_schema_path = (
@@ -80,6 +88,9 @@ def run_preprocessing(config: dict) -> None:
     input_ra_lad_schema_path = (
         schema_path + config["pipeline_settings"]["input_ra_lad_schema_name"]
     )
+
+    start_year = config["user_settings"]["start_year"]
+    end_year = config["user_settings"]["end_year"]
 
     zscore_calculation = config["user_settings"]["zscore_calculation"]
     iqr_calculation = config["user_settings"]["iqr_calculation"]
@@ -117,6 +128,9 @@ def run_preprocessing(config: dict) -> None:
     ra_lad = pivot_years_long_dataframe(
         ra_lad, new_var_col="year", new_val_col="uncon_gdhi"
     )
+
+    logger.info("Filtering data for specified years")
+    df = filter_year(df, start_year, end_year)
 
     logger.info("Calculating rate of change")
     df = calc_rate_of_change(
@@ -177,8 +191,16 @@ def run_preprocessing(config: dict) -> None:
     df = create_master_flag(df, zscore_calculation, iqr_calculation)
 
     logger.info("Saving interim data")
+    qa_df = add_config_parameter_cols(
+        df,
+        zscore_lower_threshold,
+        zscore_upper_threshold,
+        iqr_lower_quantile,
+        iqr_upper_quantile,
+        iqr_multiplier,
+    )
     logger.info(f"{output_dir + interim_filename}")
-    df.to_csv(
+    qa_df.to_csv(
         output_dir + interim_filename,
         index=False,
     )

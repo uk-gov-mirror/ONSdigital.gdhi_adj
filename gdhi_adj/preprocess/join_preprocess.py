@@ -51,7 +51,6 @@ def constrain_to_reg_acc(
     df["rate"] = np.where(
         df["unconlad"] == 0, 0, df["conlad_gdhi"] / df["unconlad"]
     )
-    print(df["rate"])
 
     df["conlsoa_gdhi"] = df["uncon_gdhi"] * df["rate"]
     df["conlsoa_mean"] = df["mean_non_out_gdhi"] * df["rate"]
