@@ -1,7 +1,6 @@
 """Module for adjusting data in the gdhi_adj project."""
 
 import os
-import re
 
 from gdhi_adj.adjustment.calc_adjustment import (
     apportion_adjustment,
@@ -81,12 +80,7 @@ def run_adjustment(config: dict) -> None:
         + filepath_dict["input_unconstrained_file_path"]
     )
 
-    match = re.search(
-        r".*GDHI_Preproc_(.*?)_[^_]+\.csv", input_unconstrained_file_path
-    )
-
-    if match:
-        gdhi_suffix = match.group(1) + "_"
+    gdhi_suffix = config["user_settings"]["output_data_prefix"] + "_"
 
     input_adj_schema_path = (
         schema_path + config["pipeline_settings"]["input_adj_schema_name"]

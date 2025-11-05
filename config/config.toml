@@ -4,8 +4,9 @@ local_or_shared = "shared" # "local" or "shared"
 start_year = 2010
 end_year = 2023
 output_data = true
+output_data_prefix = "CIS_BIDS"
 # Preprocessing settings
-preprocessing = false # Set to true if you want to run preprocessing
+preprocessing = true # Set to true if you want to run preprocessing
 zscore_calculation = true # Set to true if you want to run z-score calculation
 iqr_calculation = true # Set to true if you want to run IQR calculation
 zscore_lower_threshold = -3.0 # zscore flagged if it is below this threshold
@@ -15,7 +16,7 @@ iqr_upper_quantile = 0.75 # quantile for IQR upper bound
 iqr_multiplier = 3.0 # multiplier for calculating IQR bounds
 transaction_name = "Compensation of employees"
 # Adjustment settings
-adjustment = true # Set to true if you want to run manual adjustment
+adjustment = false # Set to true if you want to run manual adjustment
 sas_code_filter = "G866BTR"
 cord_code_filter = "D75"
 credit_debit_filter = "D"
@@ -35,7 +36,7 @@ output_adjustment_schema_path = "output_adjustment_schema.toml"
 #sharepoint site, go into the subfolder 'GDHI' and open '2025_manual_adjustments'
 #and click the 'sync' button to sync to your local OneDrive.
 input_dir = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Testing_Data/"
-input_unconstrained_file_path = "DAP_Exported/GDHI_Preproc_HMRC_PIR_Unconstrained.csv"
+input_unconstrained_file_path = "DAP_exported_311025/GDHI_Disclosure_CIS_BIDS_Total_Benefits_Unconstrained.csv"
 input_ra_lad_file_path = "Reg_Accounts/uk_gdhi_by_component_2022.csv"
 output_dir = "/Office for National Statistics/Subnational Statistics - 2025_Manual_Adjustments/Testing_Data/Output/"
 interim_filename = "manual_adj_preprocessing_interim_scores.csv" #Change name of file here

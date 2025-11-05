@@ -1,7 +1,6 @@
 """Module for pre-processing data in the gdhi_adj project."""
 
 import os
-import re
 
 from gdhi_adj.preprocess.calc_preprocess import (
     calc_iqr,
@@ -73,12 +72,7 @@ def run_preprocessing(config: dict) -> None:
         + filepath_dict["input_ra_lad_file_path"]
     )
 
-    match = re.search(
-        r".*GDHI_Preproc_(.*?)_[^_]+\.csv", input_unconstrained_file_path
-    )
-
-    if match:
-        gdhi_suffix = match.group(1) + "_"
+    gdhi_suffix = config["user_settings"]["output_data_prefix"] + "_"
 
     input_gdhi_schema_path = (
         schema_path + config["pipeline_settings"]["input_gdhi_schema_name"]
