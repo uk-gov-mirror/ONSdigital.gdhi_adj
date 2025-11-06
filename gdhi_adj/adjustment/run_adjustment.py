@@ -2,6 +2,8 @@
 
 import os
 
+import pandas as pd
+
 from gdhi_adj.adjustment.calc_adjustment import (
     apportion_adjustment,
     calc_midpoint_adjustment,
@@ -163,6 +165,21 @@ def run_adjustment(config: dict) -> None:
     df = apportion_adjustment(df)
 
     logger.info("Saving interim data")
+    qa_df = pd.DataFrame(
+        {
+            "config": [
+                f"sas_code_filter = {sas_code_filter}",
+                f"cord_code_filter = {cord_code_filter}",
+                f"credit_debit_filter = {credit_debit_filter}",
+            ],
+        }
+    )
+    qa_df.to_csv(
+        output_dir + gdhi_suffix + "manual_adj_adjustments_config.txt",
+        index=False,
+        header=False,
+    )
+
     logger.info(f"{output_dir + interim_filename}")
     df.to_csv(
         output_dir + interim_filename,

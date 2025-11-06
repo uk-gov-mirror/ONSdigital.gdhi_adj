@@ -2,6 +2,8 @@
 
 import os
 
+import pandas as pd
+
 from gdhi_adj.adjustment.filter_adjustment import filter_year
 from gdhi_adj.preprocess.calc_preprocess import (
     calc_iqr,
@@ -10,7 +12,6 @@ from gdhi_adj.preprocess.calc_preprocess import (
     calc_zscores,
 )
 from gdhi_adj.preprocess.flag_preprocess import (
-    add_config_parameter_cols,
     create_master_flag,
     flag_rollback_years,
 )
@@ -191,16 +192,26 @@ def run_preprocessing(config: dict) -> None:
     df = create_master_flag(df, zscore_calculation, iqr_calculation)
 
     logger.info("Saving interim data")
-    qa_df = add_config_parameter_cols(
-        df,
-        zscore_lower_threshold,
-        zscore_upper_threshold,
-        iqr_lower_quantile,
-        iqr_upper_quantile,
-        iqr_multiplier,
+    qa_df = pd.DataFrame(
+        {
+            "config": [
+                f"zscore_lower_threshold = {zscore_lower_threshold}",
+                f"zscore_upper_threshold = {zscore_upper_threshold}",
+                f"iqr_lower_quantile = {iqr_lower_quantile}",
+                f"iqr_upper_quantile = {iqr_upper_quantile}",
+                f"iqr_multiplier = {iqr_multiplier}",
+                f"transaction_name = {transaction_name}",
+            ],
+        }
     )
-    logger.info(f"{output_dir + interim_filename}")
     qa_df.to_csv(
+        output_dir + gdhi_suffix + "manual_adj_preprocessing_config.txt",
+        index=False,
+        header=False,
+    )
+
+    logger.info(f"{output_dir + interim_filename}")
+    df.to_csv(
         output_dir + interim_filename,
         index=False,
     )
