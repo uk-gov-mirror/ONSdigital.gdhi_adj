@@ -2,13 +2,13 @@ import pandas as pd
 
 from gdhi_adj.adjustment.calc_adjustment import (
     apportion_adjustment,
+    calc_imputed_val,
     calc_midpoint_adjustment,
-    calc_midpoint_val,
 )
 
 
-def test_calc_midpoint_val():
-    """Test the calc_midpoint_val function returns the expected midpoint row.
+def test_calc_imputed_val():
+    """Test the calc_imputed_val function returns the expected midpoint row.
 
     The function should:
     - select rows where the row's `year` is contained in that row's
@@ -26,7 +26,9 @@ def test_calc_midpoint_val():
         "year_to_adjust": [[], [2003], [], None],
     })
 
-    result_df = calc_midpoint_val(df)
+    start_year = 2002
+    end_year = 2004
+    result_df = calc_imputed_val(df, start_year, end_year)
 
     expected_df = pd.DataFrame({
         "lsoa_code": ["E1"],

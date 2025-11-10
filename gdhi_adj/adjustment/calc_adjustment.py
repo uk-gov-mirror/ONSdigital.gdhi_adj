@@ -4,16 +4,30 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import is_list_like
 
+# from scipy.interpolate import interp1d
 
-def calc_midpoint_val(df: pd.DataFrame) -> pd.DataFrame:
+
+def calc_imputed_val(
+    df: pd.DataFrame, start_year: int = 1900, end_year: int = 2100
+) -> pd.DataFrame:
     """
-    Calculate the midpoint value for a given LSOA code.
+    Calculate the imputed value for a given LSOA code where the year has been
+    flagged as an outlier to adjust.
+
+    For sequential years flagged for adjustment, the previous and next safe
+    years are located (i.e., years not flagged for adjustment). The imputed
+    value is then extrapolated from these two safe years.
+
+    For years flagged for adjustment at the start or end of the range, the
+    imputed value is extrapolated from the nearest two safe years.
 
     Args:
-        df (pd.DataFrame): DataFrame containing data to calculate midpoint.
+        df (pd.DataFrame): DataFrame with data to calculate imputed value.
+        start_year (int): Starting year for the data.
+        end_year (int): End year for the data.
 
     Returns:
-        pd.DataFrame: DataFrame containing outlier midpoints.
+        pd.DataFrame: DataFrame containing outlier imputed values.
     """
 
     # ensure year_to_adjust is list-like and normalize missing
@@ -32,37 +46,117 @@ def calc_midpoint_val(df: pd.DataFrame) -> pd.DataFrame:
 
     mask = df.apply(lambda r: (r["year"] in r["year_to_adjust"]), axis=1)
 
-    midpoint_df = df.loc[mask].copy()
+    imputed_df = df.loc[mask].copy()
 
     # prepare lookup table of values by (lsoa_code, year)
     lookup = df[["lsoa_code", "year", "con_gdhi"]].copy()
 
-    # join previous year value
-    midpoint_df["prev_year"] = midpoint_df["year"] - 1
-    midpoint_df = midpoint_df.merge(
-        lookup.rename(
-            columns={"year": "prev_year", "con_gdhi": "prev_con_gdhi"}
+    # Find previous year value not flagged to adjust
+    def decrease_until_not_in(year, adjust_years, start_year):
+        # convert to set for speed (if it's not already)
+        adjust_years_set = (
+            set(adjust_years) if adjust_years is not None else set()
+        )
+        while year in adjust_years_set and year > start_year:
+            year -= 1
+        return year
+
+    imputed_df["prev_safe_year"] = imputed_df.apply(
+        lambda r: decrease_until_not_in(
+            r["year"], r["year_to_adjust"], start_year
         ),
-        on=["lsoa_code", "prev_year"],
+        axis=1,
+    )
+    imputed_df = imputed_df.merge(
+        lookup.rename(
+            columns={"year": "prev_safe_year", "con_gdhi": "prev_con_gdhi"}
+        ),
+        on=["lsoa_code", "prev_safe_year"],
         how="left",
     )
 
-    # join next year value
-    midpoint_df["next_year"] = midpoint_df["year"] + 1
-    midpoint_df = midpoint_df.merge(
-        lookup.rename(
-            columns={"year": "next_year", "con_gdhi": "next_con_gdhi"}
+    # Find next year value not flagged to adjust
+    def increase_until_not_in(year, adjust_years, end_year):
+        # convert to set for speed (if it's not already)
+        adjust_years_set = (
+            set(adjust_years) if adjust_years is not None else set()
+        )
+        while year in adjust_years_set and year < end_year:
+            year += 1
+        return year
+
+    imputed_df["next_safe_year"] = imputed_df.apply(
+        lambda r: increase_until_not_in(
+            r["year"], r["year_to_adjust"], end_year
         ),
-        on=["lsoa_code", "next_year"],
+        axis=1,
+    )
+    imputed_df = imputed_df.merge(
+        lookup.rename(
+            columns={"year": "next_safe_year", "con_gdhi": "next_con_gdhi"}
+        ),
+        on=["lsoa_code", "next_safe_year"],
         how="left",
     )
 
-    # midpoint: average of prev and next (NaN if either missing)
-    midpoint_df["midpoint"] = midpoint_df[
-        ["prev_con_gdhi", "next_con_gdhi"]
-    ].mean(axis=1)
+    imputed_df["imputed_gdhi"] = np.where(
+        imputed_df["prev_con_gdhi"].notna()
+        & imputed_df["next_con_gdhi"].notna(),
+        (imputed_df["next_con_gdhi"] - imputed_df["prev_con_gdhi"])
+        / (imputed_df["next_safe_year"] - imputed_df["prev_safe_year"])
+        * (imputed_df["year"] - imputed_df["prev_safe_year"])
+        + imputed_df["prev_con_gdhi"],
+        np.NaN,
+    )
 
-    return midpoint_df
+    # Handle cases where only one side is available for extrapolation
+    imputed_df["additional_safe_year"] = np.where(
+        imputed_df["prev_con_gdhi"].isna(),
+        (imputed_df["next_safe_year"] + 1),
+        np.where(
+            imputed_df["next_con_gdhi"].isna(),
+            (imputed_df["prev_safe_year"] - 1),
+            np.NaN,
+        ),
+    )
+    imputed_df = imputed_df.merge(
+        lookup.rename(
+            columns={
+                "year": "additional_safe_year",
+                "con_gdhi": "additional_con_gdhi",
+            }
+        ),
+        on=["lsoa_code", "additional_safe_year"],
+        how="left",
+    )
+    breakpoint()
+    imputed_df["imputed_gdhi"] = np.where(
+        imputed_df["imputed_gdhi"].isna()
+        & imputed_df["additional_con_gdhi"].notna(),
+        np.where(
+            imputed_df["prev_con_gdhi"].isna(),
+            imputed_df["next_con_gdhi"]
+            - (imputed_df["additional_con_gdhi"] - imputed_df["next_con_gdhi"])
+            * (imputed_df["next_safe_year"] - imputed_df["year"]),
+            imputed_df["prev_con_gdhi"]
+            + (imputed_df["prev_con_gdhi"] - imputed_df["additional_con_gdhi"])
+            * (imputed_df["year"] - imputed_df["prev_safe_year"]),
+        ),
+        imputed_df["imputed_gdhi"],
+    )
+    # imputed_df["imputed_gdhi2"] = np.where(
+    #     (imputed_df["prev_con_gdhi"].notna() &
+    #         imputed_df["next_con_gdhi"].notna()),
+    #     interp1d(
+    #         x=[imputed_df["prev_safe_year"], imputed_df["next_safe_year"]],
+    #         y=[imputed_df["prev_con_gdhi"], imputed_df["next_con_gdhi"]],
+    #         fill_value="extrapolate"
+    #     )(imputed_df["year"]),
+    #     np.NaN
+    # )
+    breakpoint()
+
+    return imputed_df
 
 
 def calc_midpoint_adjustment(

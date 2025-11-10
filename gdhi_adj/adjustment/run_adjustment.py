@@ -6,8 +6,8 @@ import pandas as pd
 
 from gdhi_adj.adjustment.calc_adjustment import (
     apportion_adjustment,
+    calc_imputed_val,
     calc_midpoint_adjustment,
-    calc_midpoint_val,
 )
 from gdhi_adj.adjustment.filter_adjustment import (
     filter_adjust,
@@ -156,7 +156,7 @@ def run_adjustment(config: dict) -> None:
     df = filter_year(df, start_year, end_year)
 
     logger.info("Calculating outlier year midpoints")
-    midpoint_df = calc_midpoint_val(df)
+    midpoint_df = calc_imputed_val(df, start_year, end_year)
 
     logger.info("Calculating adjustment values based on midpoints")
     df = calc_midpoint_adjustment(df, midpoint_df)
