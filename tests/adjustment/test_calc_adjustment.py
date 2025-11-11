@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from gdhi_adj.adjustment.calc_adjustment import (
@@ -7,45 +8,75 @@ from gdhi_adj.adjustment.calc_adjustment import (
 )
 
 
-def test_calc_imputed_val():
-    """Test the calc_imputed_val function returns the expected imputed values.
+class TestCalcImputedVal:
+    """Tests for the calc_imputed_val function."""
+    def test_calc_imputed_val_interpolation(self):
+        """Test the calc_imputed_val function returns the expected imputed
+        values when values are within the year range.
+        """
+        df = pd.DataFrame({
+            "lsoa_code": ["E1", "E1", "E1", "E1"],
+            "year": [2002, 2003, 2004, 2005],
+            "con_gdhi": [10.0, 8.0, 10.0, 16.0],
+            "year_to_adjust": [
+                [2003, 2004], [2003, 2004], [2003, 2004], [2003, 2004]
+            ],
+        })
 
-    The function should:
-    - select rows where the row's `year` is contained in that row's
-      `year_to_adjust` value,
-    - compute `prev_con_gdhi` and `next_con_gdhi` by looking up the
-      same `lsoa_code` at year-1 and year+1,
-    - compute `imputed_gdhi` by either interpolating or extrapolating, two safe
-      designated values.
-    """
-    df = pd.DataFrame({
-        "lsoa_code": ["E1", "E1", "E1", "E2"],
-        "year": [2002, 2003, 2004, 2003],
-        "uncon_gdhi": [10.0, 20.0, 26.0, 45.0],
-        "con_gdhi": [5.0, 8.0, 10.0, 15.0],
-        # only the 2003 row for E1 should be flagged for adjustment
-        "year_to_adjust": [[], [2003], [], None],
-    })
+        start_year = 2002
+        end_year = 2005
+        result_df = calc_imputed_val(df, start_year, end_year)
 
-    start_year = 2002
-    end_year = 2004
-    result_df = calc_imputed_val(df, start_year, end_year)
+        expected_df = pd.DataFrame({
+            "lsoa_code": ["E1", "E1"],
+            "year": [2003, 2004],
+            "con_gdhi": [8.0, 10.0],
+            # only the 2003 row for E1 should be flagged for adjustment
+            "year_to_adjust": [[2003, 2004], [2003, 2004]],
+            "prev_safe_year": [2002, 2002],
+            "prev_con_gdhi": [10.0, 10.0],
+            "next_safe_year": [2005, 2005],
+            "next_con_gdhi": [16.0, 16.0],
+            "imputed_gdhi": [12.0, 14.0],
+        })
 
-    expected_df = pd.DataFrame({
-        "lsoa_code": ["E1"],
-        "year": [2003],
-        "uncon_gdhi": [20.0],
-        "con_gdhi": [8.0],
-        # only the 2003 row for E1 should be flagged for adjustment
-        "year_to_adjust": [[2003]],
-        "prev_year": [2002],
-        "prev_con_gdhi": [5.0],
-        "next_year": [2004],
-        "next_con_gdhi": [10.0],
-        "imputed_gdhi": [7.5],
-    })
+        pd.testing.assert_frame_equal(
+            result_df, expected_df, check_names=False
+        )
 
-    pd.testing.assert_frame_equal(result_df, expected_df, check_dtype=False)
+    def test_calc_imputed_val_extrapolation(self):
+        """Test the calc_imputed_val function returns the expected imputed
+        values when values are at the end of the year range.
+        """
+        df = pd.DataFrame({
+            "lsoa_code": ["E1", "E1", "E1", "E1"],
+            "year": [2002, 2003, 2004, 2005],
+            "con_gdhi": [35.0, 32.0, 24.0, 26.0],
+            "year_to_adjust": [
+                [2002, 2003], [2002, 2003], [2002, 2003], [2002, 2003]
+            ],
+        })
+
+        start_year = 2002
+        end_year = 2005
+        result_df = calc_imputed_val(df, start_year, end_year)
+
+        expected_df = pd.DataFrame({
+            "lsoa_code": ["E1", "E1"],
+            "year": [2002, 2003],
+            "con_gdhi": [35.0, 32.0],
+            # only the 2003 row for E1 should be flagged for adjustment
+            "year_to_adjust": [[2002, 2003], [2002, 2003]],
+            "prev_safe_year": [2001, 2001],
+            "prev_con_gdhi": [np.nan, np.nan],
+            "next_safe_year": [2004, 2004],
+            "next_con_gdhi": [24.0, 24.0],
+            "imputed_gdhi": [20.0, 22.0],
+        })
+
+        pd.testing.assert_frame_equal(
+            result_df, expected_df, check_names=False
+        )
 
 
 def test_calc_imputed_adjustment():

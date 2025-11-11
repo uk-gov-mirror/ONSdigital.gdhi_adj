@@ -147,7 +147,9 @@ def calc_imputed_val(
         imputed_df["imputed_gdhi"],
     )
 
-    return imputed_df
+    return imputed_df.drop(
+        columns=["additional_safe_year", "additional_con_gdhi"]
+    )
 
 
 def calc_imputed_adjustment(
